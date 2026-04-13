@@ -4,6 +4,35 @@ This repo gives you a small local workflow for running Gemma 4 MLX models that
 were downloaded with LM Studio, then talking to them through
 `pi` (`@mariozechner/pi-coding-agent`).
 
+## Why `mlx-vlm`
+
+LM Studio is still useful here, but mostly as the easiest way to download and
+manage the MLX model files on disk.
+
+We use `mlx-vlm` to actually run the model because it is the piece that gives
+us:
+
+- a working OpenAI-compatible local server for these Gemma 4 MLX models
+- TurboQuant KV-cache support
+- a clean way to point `pi` at a localhost endpoint
+
+In practice, that means LM Studio is the downloader and local model manager,
+while `mlx-vlm` is the runtime that `pi` talks to.
+
+## Why the local patch
+
+This repo carries a small local patch for `mlx-vlm` because its current
+streaming tool-calling implementation can leak raw tool-call markup into the
+assistant text stream.
+
+That is especially noticeable in `pi`, where you end up seeing the model's raw
+tool-call text in the transcript even though the tool also executes normally.
+
+The patch keeps streaming enabled, but strips partial tool-call markup from the
+visible assistant text and reports `finish_reason: "tool_calls"` when tools are
+present. The result is a much cleaner `pi` experience without giving up
+streaming.
+
 It uses:
 
 - `mise` for tool installation

@@ -1,0 +1,8 @@
+[project]
+name = "gemma4"
+version = "0.1.0"
+description = "Local Gemma 4 runners for mlx-vlm using LM Studio-downloaded weights"
+requires-python = ">=3.12"
+dependencies = [
+    "mlx-vlm>=0.4.4",
+]

@@ -488,7 +488,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "mlx-vlm", specifier = ">=0.4.4" }]
+requires-dist = [{ name = "mlx-vlm", specifier = "==0.4.4" }]
 
 [[package]]
 name = "h11"

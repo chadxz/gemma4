@@ -1,0 +1,138 @@
+diff --git a/mlx_vlm/server.py b/mlx_vlm/server.py
+index 04c011f..7a4a40d 100644
+--- a/mlx_vlm/server.py
++++ b/mlx_vlm/server.py
+@@ -646,7 +646,9 @@ def build_generation_kwargs(
+     }
+ 
+ 
+-def process_tool_calls(model_output: str, tool_module, tools):
++def process_tool_calls(
++    model_output: str, tool_module, tools, drop_partial=False, log_invalid=True
++):
+     called_tools = []
+     remaining = model_output
+ 
+@@ -686,7 +688,10 @@ def process_tool_calls(model_output: str, tool_module, tools):
+                     called_tools.append(called_tool)
+                     tool_call_index += 1
+                 except Exception:
+-                    print(f"Invalid tool call: {call}")
++                    if log_invalid:
++                        print(f"Invalid tool call: {call}")
++        if drop_partial and tool_module.tool_call_start in remaining:
++            remaining = remaining.split(tool_module.tool_call_start, 1)[0].rstrip()
+     return dict(calls=called_tools, remaining_text=remaining)
+ 
+ 
+@@ -1132,6 +1137,7 @@ async def chat_completions_endpoint(request: ChatRequest):
+                     )
+ 
+                     output_text = ""
++                    streamed_text = ""
+                     request_id = f"chatcmpl-{uuid.uuid4()}"
+                     for chunk in token_iterator:
+                         if chunk is None or not hasattr(chunk, "text"):
+@@ -1151,22 +1157,64 @@ async def chat_completions_endpoint(request: ChatRequest):
+                             "peak_memory": chunk.peak_memory,
+                         }
+ 
+-                        choices = [
+-                            ChatStreamChoice(
+-                                delta=ChatMessage(role="assistant", content=chunk.text)
++                        content_delta = chunk.text
++                        if tool_parser_type is not None:
++                            preview = process_tool_calls(
++                                model_output=output_text,
++                                tool_module=tool_module,
++                                tools=tools,
++                                drop_partial=True,
++                                log_invalid=False,
+                             )
+-                        ]
+-                        chunk_data = ChatStreamChunk(
+-                            id=request_id,
+-                            created=int(time.time()),
+-                            model=request.model,
+-                            usage=usage_stats,
+-                            choices=choices,
+-                        )
++                            visible_text = preview["remaining_text"]
++                            content_delta = ""
++                            if visible_text.startswith(streamed_text):
++                                content_delta = visible_text[len(streamed_text) :]
++                            streamed_text = visible_text
+ 
+-                        yield f"data: {chunk_data.model_dump_json()}\n\n"
++                        if content_delta:
++                            choices = [
++                                ChatStreamChoice(
++                                    delta=ChatMessage(
++                                        role="assistant", content=content_delta
++                                    )
++                                )
++                            ]
++                            chunk_data = ChatStreamChunk(
++                                id=request_id,
++                                created=int(time.time()),
++                                model=request.model,
++                                usage=usage_stats,
++                                choices=choices,
++                            )
++
++                            yield f"data: {chunk_data.model_dump_json()}\n\n"
+ 
+                     if tool_parser_type is not None:
++                        final_visible_text = process_tool_calls(
++                            model_output=output_text,
++                            tool_module=tool_module,
++                            tools=tools,
++                            log_invalid=False,
++                        )["remaining_text"]
++                        final_delta = ""
++                        if final_visible_text.startswith(streamed_text):
++                            final_delta = final_visible_text[len(streamed_text) :]
++                        if final_delta:
++                            final_chunk = ChatStreamChunk(
++                                id=request_id,
++                                created=int(time.time()),
++                                model=request.model,
++                                usage=usage_stats,
++                                choices=[
++                                    ChatStreamChoice(
++                                        delta=ChatMessage(
++                                            role="assistant", content=final_delta
++                                        )
++                                    )
++                                ],
++                            )
++                            yield f"data: {final_chunk.model_dump_json()}\n\n"
+                         tool_calls = process_tool_calls(
+                             model_output=output_text,
+                             tool_module=tool_module,
+@@ -1176,10 +1224,12 @@ async def chat_completions_endpoint(request: ChatRequest):
+                         tool_calls = {}
+                         tool_calls["calls"] = []
+ 
++                    finish_reason = "tool_calls" if tool_calls["calls"] else "stop"
++
+                     # Signal stream end
+                     choices = [
+                         ChatStreamChoice(
+-                            finish_reason="stop",
++                            finish_reason=finish_reason,
+                             delta=ChatMessage(
+                                 role="assistant",
+                                 content="",
+@@ -1259,9 +1309,10 @@ async def chat_completions_endpoint(request: ChatRequest):
+                     tool_calls["calls"] = []
+                     tool_calls["remaining_text"] = gen_result.text
+ 
++                finish_reason = "tool_calls" if tool_calls["calls"] else "stop"
+                 choices = [
+                     ChatChoice(
+-                        finish_reason="stop",
++                        finish_reason=finish_reason,
+                         message=ChatMessage(
+                             role="assistant",
+                             content=tool_calls["remaining_text"],

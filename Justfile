@@ -8,8 +8,13 @@ default:
 
 sync:
     uv sync
+    ./scripts/apply-mlx-vlm-patch.sh
+
+patch-mlx-vlm:
+    ./scripts/apply-mlx-vlm-patch.sh
 
 server model_path:
+    ./scripts/apply-mlx-vlm-patch.sh
     uv run python -m mlx_vlm server --model "{{ model_path }}" --port 8080 {{ turbo_opts }}
 
 server-26b-a4b-4bit:
@@ -25,6 +30,7 @@ server-31b-8bit:
     uv run python -m mlx_vlm server --model "{{ mlx_root }}/gemma4-31b-8bit" --port 8080 {{ turbo_opts }}
 
 chat model_path:
+    ./scripts/apply-mlx-vlm-patch.sh
     uv run python -m mlx_vlm.chat --model "{{ model_path }}" {{ turbo_opts }}
 
 chat-26b-a4b-4bit:

@@ -58,6 +58,16 @@ cd ~/src/personal/gemma4
 just sync
 ```
 
+`just sync` also reapplies the local `mlx-vlm` patch that keeps streamed tool
+calls from leaking raw markup into `pi` output.
+
+If you want to reapply that patch by itself:
+
+```bash
+cd ~/src/personal/gemma4
+just patch-mlx-vlm
+```
+
 ## Download the models in LM Studio
 
 Download these MLX models in LM Studio:

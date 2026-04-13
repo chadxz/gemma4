@@ -4,6 +4,75 @@ This repo gives you a small local workflow for running Gemma 4 MLX models that
 were downloaded with LM Studio, then talking to them through
 `pi` (`@mariozechner/pi-coding-agent`).
 
+## Quickstart
+
+1. Install `pi`:
+
+```bash
+npm install -g @mariozechner/pi-coding-agent
+```
+
+2. Enable `mise` shell integration, then install this repo's tools:
+
+```bash
+eval "$(mise activate zsh)"
+cd ~/src/personal/gemma4
+mise trust
+mise install
+just sync
+```
+
+3. Download these four Gemma 4 MLX models in LM Studio:
+
+- `mlx-community/gemma-4-26b-a4b-it-8bit`
+- `mlx-community/gemma-4-26b-a4b-it-4bit`
+- `mlx-community/gemma-4-31b-it-8bit`
+- `mlx-community/gemma-4-31b-it-4bit`
+
+4. Create the local symlinks in `models/`:
+
+```bash
+cd ~/src/personal/gemma4
+mkdir -p models
+
+ln -sfn ~/.lmstudio/models/mlx-community/gemma-4-26b-a4b-it-8bit \
+  models/gemma4-26b-a4b-8bit
+ln -sfn ~/.lmstudio/models/mlx-community/gemma-4-26b-a4b-it-4bit \
+  models/gemma4-26b-a4b-4bit
+ln -sfn ~/.lmstudio/models/mlx-community/gemma-4-31b-it-8bit \
+  models/gemma4-31b-8bit
+ln -sfn ~/.lmstudio/models/mlx-community/gemma-4-31b-it-4bit \
+  models/gemma4-31b-4bit
+```
+
+5. Set up `pi`:
+
+- Add the `mlx-vlm` provider from
+  [pi.models.example.json](pi.models.example.json) to
+  `~/.pi/agent/models.json`.
+- Add these model ids to `enabledModels` in `~/.pi/agent/settings.json`:
+
+```json
+[
+  "mlx-vlm/models/gemma4-26b-a4b-8bit",
+  "mlx-vlm/models/gemma4-26b-a4b-4bit",
+  "mlx-vlm/models/gemma4-31b-8bit",
+  "mlx-vlm/models/gemma4-31b-4bit"
+]
+```
+
+6. Start one model server:
+
+```bash
+just server-26b-a4b-8bit
+```
+
+7. In another terminal, run `pi` against it:
+
+```bash
+pi --model mlx-vlm/models/gemma4-26b-a4b-8bit
+```
+
 ## Why `mlx-vlm`
 
 LM Studio is still useful here, but mostly as the easiest way to download and
@@ -65,6 +134,7 @@ Then restart your shell and run:
 
 ```bash
 cd ~/src/personal/gemma4
+mise trust
 mise install
 ```
 
@@ -200,15 +270,15 @@ just chat-31b-4bit
 In another terminal:
 
 ```bash
-pi --model "Gemma 4 26B A4B IT 8bit (mlx-vlm)"
+pi --model mlx-vlm/models/gemma4-26b-a4b-8bit
 ```
 
 Or choose one of the others:
 
 ```bash
-pi --model "Gemma 4 26B A4B IT 4bit (mlx-vlm)"
-pi --model "Gemma 4 31B IT 8bit (mlx-vlm)"
-pi --model "Gemma 4 31B IT 4bit (mlx-vlm)"
+pi --model mlx-vlm/models/gemma4-26b-a4b-4bit
+pi --model mlx-vlm/models/gemma4-31b-8bit
+pi --model mlx-vlm/models/gemma4-31b-4bit
 ```
 
 ## Notes

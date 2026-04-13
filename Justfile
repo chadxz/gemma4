@@ -18,29 +18,29 @@ server model_path:
     uv run python -m mlx_vlm server --model "{{ model_path }}" --port 8080 {{ turbo_opts }}
 
 server-26b-a4b-4bit:
-    uv run python -m mlx_vlm server --model "{{ mlx_root }}/gemma4-26b-a4b-4bit" --port 8080 {{ turbo_opts }}
+    just server "{{ mlx_root }}/gemma4-26b-a4b-4bit"
 
 server-26b-a4b-8bit:
-    uv run python -m mlx_vlm server --model "{{ mlx_root }}/gemma4-26b-a4b-8bit" --port 8080 {{ turbo_opts }}
+    just server "{{ mlx_root }}/gemma4-26b-a4b-8bit"
 
 server-31b-4bit:
-    uv run python -m mlx_vlm server --model "{{ mlx_root }}/gemma4-31b-4bit" --port 8080 {{ turbo_opts }}
+    just server "{{ mlx_root }}/gemma4-31b-4bit"
 
 server-31b-8bit:
-    uv run python -m mlx_vlm server --model "{{ mlx_root }}/gemma4-31b-8bit" --port 8080 {{ turbo_opts }}
+    just server "{{ mlx_root }}/gemma4-31b-8bit"
 
 chat model_path:
     ./scripts/apply-mlx-vlm-patch.sh
     uv run python -m mlx_vlm.chat --model "{{ model_path }}" {{ turbo_opts }}
 
 chat-26b-a4b-4bit:
-    uv run python -m mlx_vlm.chat --model "{{ mlx_root }}/gemma4-26b-a4b-4bit" {{ turbo_opts }}
+    just chat "{{ mlx_root }}/gemma4-26b-a4b-4bit"
 
 chat-26b-a4b-8bit:
-    uv run python -m mlx_vlm.chat --model "{{ mlx_root }}/gemma4-26b-a4b-8bit" {{ turbo_opts }}
+    just chat "{{ mlx_root }}/gemma4-26b-a4b-8bit"
 
 chat-31b-4bit:
-    uv run python -m mlx_vlm.chat --model "{{ mlx_root }}/gemma4-31b-4bit" {{ turbo_opts }}
+    just chat "{{ mlx_root }}/gemma4-31b-4bit"
 
 chat-31b-8bit:
-    uv run python -m mlx_vlm.chat --model "{{ mlx_root }}/gemma4-31b-8bit" {{ turbo_opts }}
+    just chat "{{ mlx_root }}/gemma4-31b-8bit"

@@ -2,7 +2,10 @@
 set -euo pipefail
 
 root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-patch_file="$root_dir/patches/mlx-vlm-streaming-tool-calls.patch"
+patch_files=(
+  "$root_dir/patches/mlx-vlm-streaming-tool-calls.patch"
+  "$root_dir/patches/mlx-vlm-reuse-prompt-cache.patch"
+)
 
 site_packages="$(
   cd "$root_dir"
@@ -16,18 +19,20 @@ print(paths[0])
 PY
 )"
 
-if (
-  cd "$site_packages"
-  git apply --reverse --check -p1 "$patch_file"
-) >/dev/null 2>&1; then
-  echo "mlx-vlm patch already applied"
-  exit 0
-fi
+for patch_file in "${patch_files[@]}"; do
+  if (
+    cd "$site_packages"
+    git apply --reverse --check -p1 "$patch_file"
+  ) >/dev/null 2>&1; then
+    echo "$(basename "$patch_file") already applied"
+    continue
+  fi
 
-(
-  cd "$site_packages"
-  git apply --check -p1 "$patch_file"
-  git apply -p1 "$patch_file"
-)
+  (
+    cd "$site_packages"
+    git apply --check -p1 "$patch_file"
+    git apply -p1 "$patch_file"
+  )
 
-echo "Applied mlx-vlm patch to $site_packages"
+  echo "Applied $(basename "$patch_file") to $site_packages"
+done

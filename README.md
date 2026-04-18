@@ -160,6 +160,18 @@ just sync
 `just sync` also reapplies the local `mlx-vlm` patch that keeps streamed tool
 calls from leaking raw markup into `pi` output.
 
+For long-running, multi-turn coding sessions, you can also start the server
+with `--reuse-prompt-cache` to reuse KV cache across sequential requests that
+share a common prefix. This works best when one active conversation is talking
+to the server.
+
+Example:
+
+```bash
+cd ~/src/personal/gemma4
+just server
+```
+
 If you want to reapply that patch by itself:
 
 ```bash

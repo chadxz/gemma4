@@ -13,21 +13,28 @@ sync:
 patch-mlx-vlm:
     ./scripts/apply-mlx-vlm-patch.sh
 
-server model_path:
+server-model model_path:
     ./scripts/apply-mlx-vlm-patch.sh
     uv run python -m mlx_vlm server --model "{{ model_path }}" --port 8080 {{ turbo_opts }}
 
 server-26b-a4b-4bit:
-    just server "{{ mlx_root }}/gemma4-26b-a4b-4bit"
+    just server-model "{{ mlx_root }}/gemma4-26b-a4b-4bit"
 
 server-26b-a4b-8bit:
-    just server "{{ mlx_root }}/gemma4-26b-a4b-8bit"
+    just server-model "{{ mlx_root }}/gemma4-26b-a4b-8bit"
 
 server-31b-4bit:
-    just server "{{ mlx_root }}/gemma4-31b-4bit"
+    just server-model "{{ mlx_root }}/gemma4-31b-4bit"
 
 server-31b-8bit:
-    just server "{{ mlx_root }}/gemma4-31b-8bit"
+    just server-model "{{ mlx_root }}/gemma4-31b-8bit"
+
+server:
+    ./scripts/apply-mlx-vlm-patch.sh
+    uv run python -m mlx_vlm.server \
+        --model "{{ mlx_root }}/gemma4-26b-a4b-8bit" \
+        --port 8080 \
+        --reuse-prompt-cache
 
 chat model_path:
     ./scripts/apply-mlx-vlm-patch.sh
